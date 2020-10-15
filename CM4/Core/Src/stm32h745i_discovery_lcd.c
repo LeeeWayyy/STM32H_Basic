@@ -92,11 +92,11 @@
 /** @defgroup STM32H745I_DISCOVERY_LCD_Private_Variables Private Variables
   * @{
   */
-DMA2D_HandleTypeDef hdma2d_discovery;
-LTDC_HandleTypeDef  hltdc_discovery;
+extern DMA2D_HandleTypeDef hdma2d;
+extern LTDC_HandleTypeDef  hltdc;
 
 /* Timer handler declaration */
-static TIM_HandleTypeDef LCD_TimHandle;
+extern TIM_HandleTypeDef htim8;
 
 /* Default LCD configuration with LCD Layer 1 */
 static uint32_t            ActiveLayer = 0;
@@ -133,43 +133,45 @@ uint8_t BSP_LCD_Init(void)
 {
   /* The RK043FN48H LCD 480x272 is used*/
   /* Timing Configuration */
-  hltdc_discovery.Init.HorizontalSync = (RK043FN48H_HSYNC - 1);
-  hltdc_discovery.Init.VerticalSync = (RK043FN48H_VSYNC - 1);
-  hltdc_discovery.Init.AccumulatedHBP = (RK043FN48H_HSYNC + (RK043FN48H_HBP-11) - 1); /*RK043FN48H_HBP-11: adjust timing to be updated in the component*/
-  hltdc_discovery.Init.AccumulatedVBP = (RK043FN48H_VSYNC + RK043FN48H_VBP - 1);
-  hltdc_discovery.Init.AccumulatedActiveH = (RK043FN48H_HEIGHT + RK043FN48H_VSYNC + RK043FN48H_VBP - 1);
-  hltdc_discovery.Init.AccumulatedActiveW = (RK043FN48H_WIDTH + RK043FN48H_HSYNC + (RK043FN48H_HBP-11) - 1);/*RK043FN48H_HBP-11: adjust timing to be updated in the component*/
-  hltdc_discovery.Init.TotalHeigh = (RK043FN48H_HEIGHT + RK043FN48H_VSYNC + RK043FN48H_VBP + RK043FN48H_VFP - 1);
-  hltdc_discovery.Init.TotalWidth = (RK043FN48H_WIDTH + RK043FN48H_HSYNC + (RK043FN48H_HBP-11) + RK043FN48H_HFP - 1);/*RK043FN48H_HBP-11: adjust timing to be updated in the component*/
+  hltdc.Init.HorizontalSync = (RK043FN48H_HSYNC - 1);
+  hltdc.Init.VerticalSync = (RK043FN48H_VSYNC - 1);
+  hltdc.Init.AccumulatedHBP = (RK043FN48H_HSYNC + (RK043FN48H_HBP-11) - 1); /*RK043FN48H_HBP-11: adjust timing to be updated in the component*/
+  hltdc.Init.AccumulatedVBP = (RK043FN48H_VSYNC + RK043FN48H_VBP - 1);
+  hltdc.Init.AccumulatedActiveH = (RK043FN48H_HEIGHT + RK043FN48H_VSYNC + RK043FN48H_VBP - 1);
+  hltdc.Init.AccumulatedActiveW = (RK043FN48H_WIDTH + RK043FN48H_HSYNC + (RK043FN48H_HBP-11) - 1);/*RK043FN48H_HBP-11: adjust timing to be updated in the component*/
+  hltdc.Init.TotalHeigh = (RK043FN48H_HEIGHT + RK043FN48H_VSYNC + RK043FN48H_VBP + RK043FN48H_VFP - 1);
+  hltdc.Init.TotalWidth = (RK043FN48H_WIDTH + RK043FN48H_HSYNC + (RK043FN48H_HBP-11) + RK043FN48H_HFP - 1);/*RK043FN48H_HBP-11: adjust timing to be updated in the component*/
   
 
 
   /* Initialize the LCD pixel width and pixel height */
-  hltdc_discovery.LayerCfg->ImageWidth  = RK043FN48H_WIDTH;
-  hltdc_discovery.LayerCfg->ImageHeight = RK043FN48H_HEIGHT;
+  hltdc.LayerCfg->ImageWidth  = RK043FN48H_WIDTH;
+  hltdc.LayerCfg->ImageHeight = RK043FN48H_HEIGHT;
 
 
   /* Background value */
-  hltdc_discovery.Init.Backcolor.Blue = 0;
-  hltdc_discovery.Init.Backcolor.Green = 0;
-  hltdc_discovery.Init.Backcolor.Red = 0;
+  hltdc.Init.Backcolor.Blue = 0;
+  hltdc.Init.Backcolor.Green = 0;
+  hltdc.Init.Backcolor.Red = 0;
 
   /* Polarity */
-  hltdc_discovery.Init.HSPolarity = LTDC_HSPOLARITY_AL;
-  hltdc_discovery.Init.VSPolarity = LTDC_VSPOLARITY_AL;
-  hltdc_discovery.Init.DEPolarity = LTDC_DEPOLARITY_AL;
-  hltdc_discovery.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
-  hltdc_discovery.Instance = LTDC;
+  hltdc.Init.HSPolarity = LTDC_HSPOLARITY_AL;
+  hltdc.Init.VSPolarity = LTDC_VSPOLARITY_AL;
+  hltdc.Init.DEPolarity = LTDC_DEPOLARITY_AL;
+  hltdc.Init.PCPolarity = LTDC_PCPOLARITY_IPC;
+  hltdc.Instance = LTDC;
 
   /* LCD clock configuration */
-  BSP_LCD_ClockConfig(&hltdc_discovery, NULL);
+  BSP_LCD_ClockConfig(&hltdc, NULL);
 
-  if(HAL_LTDC_GetState(&hltdc_discovery) == HAL_LTDC_STATE_RESET)
+  if(HAL_LTDC_GetState(&hltdc) == HAL_LTDC_STATE_RESET)
   {
     /* Initialize the LCD Msp: this __weak function can be rewritten by the application */
-    BSP_LCD_MspInit(&hltdc_discovery, NULL);
+//	  BSP_LCD_MspInit(&hltdc, NULL);
   }
-  HAL_LTDC_Init(&hltdc_discovery);
+
+  BSP_LCD_MspInit(&hltdc, NULL);
+  HAL_LTDC_Init(&hltdc);
 
 #if !defined(DATA_IN_ExtSDRAM)
   /* When DATA_IN_ExtSDRAM define is enabled, the SDRAM will be configured in SystemInit()
@@ -183,7 +185,7 @@ uint8_t BSP_LCD_Init(void)
   BSP_LCD_SetFont(&LCD_DEFAULT_FONT);
 
   /* Initialize TIM in PWM mode to control brightness */
-  TIMx_PWM_Init(&LCD_TimHandle);
+  TIMx_PWM_Init(&htim8);
 
   return LCD_OK;
 }
@@ -194,20 +196,20 @@ uint8_t BSP_LCD_Init(void)
   */
 uint8_t BSP_LCD_DeInit(void)
 {
-  /* Initialize the hltdc_discovery Instance parameter */
-  hltdc_discovery.Instance = LTDC;
+  /* Initialize the hltdc Instance parameter */
+  hltdc.Instance = LTDC;
 
  /* Disable LTDC block */
-  __HAL_LTDC_DISABLE(&hltdc_discovery);
+  __HAL_LTDC_DISABLE(&hltdc);
 
   /* DeInit the LTDC */
-  HAL_LTDC_DeInit(&hltdc_discovery);
+  HAL_LTDC_DeInit(&hltdc);
 
   /* DeInit the LTDC MSP : this __weak function can be rewritten by the application */
-  BSP_LCD_MspDeInit(&hltdc_discovery, NULL);
+  BSP_LCD_MspDeInit(&hltdc, NULL);
 
   /* DeInit TIM PWM */
-  TIMx_PWM_DeInit(&LCD_TimHandle);
+  TIMx_PWM_DeInit(&htim8);
 
   return LCD_OK;
 }
@@ -218,7 +220,7 @@ uint8_t BSP_LCD_DeInit(void)
   */
 uint32_t BSP_LCD_GetXSize(void)
 {
-  return hltdc_discovery.LayerCfg[ActiveLayer].ImageWidth;
+  return hltdc.LayerCfg[ActiveLayer].ImageWidth;
 }
 
 /**
@@ -227,7 +229,7 @@ uint32_t BSP_LCD_GetXSize(void)
   */
 uint32_t BSP_LCD_GetYSize(void)
 {
-  return hltdc_discovery.LayerCfg[ActiveLayer].ImageHeight;
+  return hltdc.LayerCfg[ActiveLayer].ImageHeight;
 }
 
 /**
@@ -237,7 +239,7 @@ uint32_t BSP_LCD_GetYSize(void)
   */
 void BSP_LCD_SetXSize(uint32_t imageWidthPixels)
 {
-  hltdc_discovery.LayerCfg[ActiveLayer].ImageWidth = imageWidthPixels;
+  hltdc.LayerCfg[ActiveLayer].ImageWidth = imageWidthPixels;
 }
 
 /**
@@ -247,7 +249,7 @@ void BSP_LCD_SetXSize(uint32_t imageWidthPixels)
   */
 void BSP_LCD_SetYSize(uint32_t imageHeightPixels)
 {
-  hltdc_discovery.LayerCfg[ActiveLayer].ImageHeight = imageHeightPixels;
+  hltdc.LayerCfg[ActiveLayer].ImageHeight = imageHeightPixels;
 }
 
 /**
@@ -277,7 +279,7 @@ void BSP_LCD_LayerDefaultInit(uint16_t LayerIndex, uint32_t FB_Address)
   layer_cfg.ImageWidth = BSP_LCD_GetXSize();
   layer_cfg.ImageHeight = BSP_LCD_GetYSize();
 
-  HAL_LTDC_ConfigLayer(&hltdc_discovery, &layer_cfg, LayerIndex);
+  HAL_LTDC_ConfigLayer(&hltdc, &layer_cfg, LayerIndex);
 
   DrawProp[LayerIndex].BackColor = LCD_COLOR_WHITE;
   DrawProp[LayerIndex].pFont     = &Font24;
@@ -307,13 +309,13 @@ void BSP_LCD_SetLayerVisible(uint32_t LayerIndex, FunctionalState State)
 {
   if(State == ENABLE)
   {
-    __HAL_LTDC_LAYER_ENABLE(&hltdc_discovery, LayerIndex);
+    __HAL_LTDC_LAYER_ENABLE(&hltdc, LayerIndex);
   }
   else
   {
-    __HAL_LTDC_LAYER_DISABLE(&hltdc_discovery, LayerIndex);
+    __HAL_LTDC_LAYER_DISABLE(&hltdc, LayerIndex);
   }
-  __HAL_LTDC_RELOAD_IMMEDIATE_CONFIG(&(hltdc_discovery));
+  __HAL_LTDC_RELOAD_IMMEDIATE_CONFIG(&(hltdc));
 }
 
 /**
@@ -329,11 +331,11 @@ void BSP_LCD_SetLayerVisible_NoReload(uint32_t LayerIndex, FunctionalState State
 {
   if(State == ENABLE)
   {
-    __HAL_LTDC_LAYER_ENABLE(&hltdc_discovery, LayerIndex);
+    __HAL_LTDC_LAYER_ENABLE(&hltdc, LayerIndex);
   }
   else
   {
-    __HAL_LTDC_LAYER_DISABLE(&hltdc_discovery, LayerIndex);
+    __HAL_LTDC_LAYER_DISABLE(&hltdc, LayerIndex);
   }
   /* Do not Sets the Reload  */
 }
@@ -347,7 +349,7 @@ void BSP_LCD_SetLayerVisible_NoReload(uint32_t LayerIndex, FunctionalState State
   */
 void BSP_LCD_SetTransparency(uint32_t LayerIndex, uint8_t Transparency)
 {
-  HAL_LTDC_SetAlpha(&hltdc_discovery, Transparency, LayerIndex);
+  HAL_LTDC_SetAlpha(&hltdc, Transparency, LayerIndex);
 }
 
 /**
@@ -359,7 +361,7 @@ void BSP_LCD_SetTransparency(uint32_t LayerIndex, uint8_t Transparency)
   */
 void BSP_LCD_SetTransparency_NoReload(uint32_t LayerIndex, uint8_t Transparency)
 {
-  HAL_LTDC_SetAlpha_NoReload(&hltdc_discovery, Transparency, LayerIndex);
+  HAL_LTDC_SetAlpha_NoReload(&hltdc, Transparency, LayerIndex);
 }
 
 /**
@@ -370,7 +372,7 @@ void BSP_LCD_SetTransparency_NoReload(uint32_t LayerIndex, uint8_t Transparency)
   */
 void BSP_LCD_SetLayerAddress(uint32_t LayerIndex, uint32_t Address)
 {
-  HAL_LTDC_SetAddress(&hltdc_discovery, Address, LayerIndex);
+  HAL_LTDC_SetAddress(&hltdc, Address, LayerIndex);
 }
 
 /**
@@ -381,7 +383,7 @@ void BSP_LCD_SetLayerAddress(uint32_t LayerIndex, uint32_t Address)
   */
 void BSP_LCD_SetLayerAddress_NoReload(uint32_t LayerIndex, uint32_t Address)
 {
-  HAL_LTDC_SetAddress_NoReload(&hltdc_discovery, Address, LayerIndex);
+  HAL_LTDC_SetAddress_NoReload(&hltdc, Address, LayerIndex);
 }
 
 /**
@@ -396,10 +398,10 @@ void BSP_LCD_SetLayerAddress_NoReload(uint32_t LayerIndex, uint32_t Address)
 void BSP_LCD_SetLayerWindow(uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   /* Reconfigure the layer size */
-  HAL_LTDC_SetWindowSize(&hltdc_discovery, Width, Height, LayerIndex);
+  HAL_LTDC_SetWindowSize(&hltdc, Width, Height, LayerIndex);
 
   /* Reconfigure the layer position */
-  HAL_LTDC_SetWindowPosition(&hltdc_discovery, Xpos, Ypos, LayerIndex);
+  HAL_LTDC_SetWindowPosition(&hltdc, Xpos, Ypos, LayerIndex);
 }
 
 /**
@@ -414,10 +416,10 @@ void BSP_LCD_SetLayerWindow(uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, u
 void BSP_LCD_SetLayerWindow_NoReload(uint16_t LayerIndex, uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Height)
 {
   /* Reconfigure the layer size */
-  HAL_LTDC_SetWindowSize_NoReload(&hltdc_discovery, Width, Height, LayerIndex);
+  HAL_LTDC_SetWindowSize_NoReload(&hltdc, Width, Height, LayerIndex);
 
   /* Reconfigure the layer position */
-  HAL_LTDC_SetWindowPosition_NoReload(&hltdc_discovery, Xpos, Ypos, LayerIndex);
+  HAL_LTDC_SetWindowPosition_NoReload(&hltdc, Xpos, Ypos, LayerIndex);
 }
 
 /**
@@ -429,8 +431,8 @@ void BSP_LCD_SetLayerWindow_NoReload(uint16_t LayerIndex, uint16_t Xpos, uint16_
 void BSP_LCD_SetColorKeying(uint32_t LayerIndex, uint32_t RGBValue)
 {
   /* Configure and Enable the color Keying for LCD Layer */
-  HAL_LTDC_ConfigColorKeying(&hltdc_discovery, RGBValue, LayerIndex);
-  HAL_LTDC_EnableColorKeying(&hltdc_discovery, LayerIndex);
+  HAL_LTDC_ConfigColorKeying(&hltdc, RGBValue, LayerIndex);
+  HAL_LTDC_EnableColorKeying(&hltdc, LayerIndex);
 }
 
 /**
@@ -442,8 +444,8 @@ void BSP_LCD_SetColorKeying(uint32_t LayerIndex, uint32_t RGBValue)
 void BSP_LCD_SetColorKeying_NoReload(uint32_t LayerIndex, uint32_t RGBValue)
 {
   /* Configure and Enable the color Keying for LCD Layer */
-  HAL_LTDC_ConfigColorKeying_NoReload(&hltdc_discovery, RGBValue, LayerIndex);
-  HAL_LTDC_EnableColorKeying_NoReload(&hltdc_discovery, LayerIndex);
+  HAL_LTDC_ConfigColorKeying_NoReload(&hltdc, RGBValue, LayerIndex);
+  HAL_LTDC_EnableColorKeying_NoReload(&hltdc, LayerIndex);
 }
 
 /**
@@ -454,7 +456,7 @@ void BSP_LCD_SetColorKeying_NoReload(uint32_t LayerIndex, uint32_t RGBValue)
 void BSP_LCD_ResetColorKeying(uint32_t LayerIndex)
 {
   /* Disable the color Keying for LCD Layer */
-  HAL_LTDC_DisableColorKeying(&hltdc_discovery, LayerIndex);
+  HAL_LTDC_DisableColorKeying(&hltdc, LayerIndex);
 }
 
 /**
@@ -465,7 +467,7 @@ void BSP_LCD_ResetColorKeying(uint32_t LayerIndex)
 void BSP_LCD_ResetColorKeying_NoReload(uint32_t LayerIndex)
 {
   /* Disable the color Keying for LCD Layer */
-  HAL_LTDC_DisableColorKeying_NoReload(&hltdc_discovery, LayerIndex);
+  HAL_LTDC_DisableColorKeying_NoReload(&hltdc, LayerIndex);
 }
 
 /**
@@ -477,7 +479,7 @@ void BSP_LCD_ResetColorKeying_NoReload(uint32_t LayerIndex)
   */
 void BSP_LCD_Relaod(uint32_t ReloadType)
 {
-  HAL_LTDC_Reload (&hltdc_discovery, ReloadType);
+  HAL_LTDC_Reload (&hltdc, ReloadType);
 }
 
 /**
@@ -547,27 +549,27 @@ uint32_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 {
   uint32_t ret = 0;
 
-  if(hltdc_discovery.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
+  if(hltdc.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB8888)
   {
     /* Read data value from SDRAM memory */
-    ret = *(__IO uint32_t*) (hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos)));
+    ret = *(__IO uint32_t*) (hltdc.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos)));
   }
-  else if(hltdc_discovery.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_RGB888)
+  else if(hltdc.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_RGB888)
   {
     /* Read data value from SDRAM memory */
-    ret = (*(__IO uint32_t*) (hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos))) & 0x00FFFFFF);
+    ret = (*(__IO uint32_t*) (hltdc.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos))) & 0x00FFFFFF);
   }
-  else if((hltdc_discovery.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_RGB565) || \
-          (hltdc_discovery.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB4444) || \
-          (hltdc_discovery.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_AL88))
+  else if((hltdc.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_RGB565) || \
+          (hltdc.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_ARGB4444) || \
+          (hltdc.LayerCfg[ActiveLayer].PixelFormat == LTDC_PIXEL_FORMAT_AL88))
   {
     /* Read data value from SDRAM memory */
-    ret = *(__IO uint16_t*) (hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress + (2*(Ypos*BSP_LCD_GetXSize() + Xpos)));
+    ret = *(__IO uint16_t*) (hltdc.LayerCfg[ActiveLayer].FBStartAdress + (2*(Ypos*BSP_LCD_GetXSize() + Xpos)));
   }
   else
   {
     /* Read data value from SDRAM memory */
-    ret = *(__IO uint8_t*) (hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress + (2*(Ypos*BSP_LCD_GetXSize() + Xpos)));
+    ret = *(__IO uint8_t*) (hltdc.LayerCfg[ActiveLayer].FBStartAdress + (2*(Ypos*BSP_LCD_GetXSize() + Xpos)));
   }
 
   return ret;
@@ -581,7 +583,7 @@ uint32_t BSP_LCD_ReadPixel(uint16_t Xpos, uint16_t Ypos)
 void BSP_LCD_Clear(uint32_t Color)
 {
   /* Clear the LCD */
-  LL_FillBuffer(ActiveLayer, (uint32_t *)(hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress), BSP_LCD_GetXSize(), BSP_LCD_GetYSize(), 0, Color);
+  LL_FillBuffer(ActiveLayer, (uint32_t *)(hltdc.LayerCfg[ActiveLayer].FBStartAdress), BSP_LCD_GetXSize(), BSP_LCD_GetYSize(), 0, Color);
 }
 
 /**
@@ -690,7 +692,7 @@ void BSP_LCD_DisplayStringAt(uint16_t Xpos, uint16_t Ypos, uint8_t *Text, Text_A
   */
 void BSP_LCD_DisplayStringAtLine(uint16_t Line, uint8_t *ptr)
 {
-  BSP_LCD_DisplayStringAt(0, LINE(Line), ptr, LEFT_MODE);
+  BSP_LCD_DisplayStringAt(0, Line, ptr, LEFT_MODE);
 }
 
 /**
@@ -705,7 +707,7 @@ void BSP_LCD_DrawHLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
   uint32_t  Xaddress = 0;
 
   /* Get the line address */
-  Xaddress = (hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
+  Xaddress = (hltdc.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
 
   /* Write line */
   LL_FillBuffer(ActiveLayer, (uint32_t *)Xaddress, Length, 1, 0, DrawProp[ActiveLayer].TextColor);
@@ -723,7 +725,7 @@ void BSP_LCD_DrawVLine(uint16_t Xpos, uint16_t Ypos, uint16_t Length)
   uint32_t  Xaddress = 0;
 
   /* Get the line address */
-  Xaddress = (hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
+  Xaddress = (hltdc.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
 
   /* Write line */
   LL_FillBuffer(ActiveLayer, (uint32_t *)Xaddress, 1, Length, (BSP_LCD_GetXSize() - 1), DrawProp[ActiveLayer].TextColor);
@@ -941,7 +943,7 @@ void BSP_LCD_DrawEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
 void BSP_LCD_DrawPixel(uint16_t Xpos, uint16_t Ypos, uint32_t RGB_Code)
 {
   /* Write data value to all SDRAM memory */
-  *(__IO uint32_t*) (hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos))) = RGB_Code;
+  *(__IO uint32_t*) (hltdc.LayerCfg[ActiveLayer].FBStartAdress + (4*(Ypos*BSP_LCD_GetXSize() + Xpos))) = RGB_Code;
 }
 
 /**
@@ -970,7 +972,7 @@ void BSP_LCD_DrawBitmap(uint32_t Xpos, uint32_t Ypos, uint8_t *pbmp)
   bit_pixel = pbmp[28] + (pbmp[29] << 8);
 
   /* Set the address */
-  address = hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress + (((BSP_LCD_GetXSize()*Ypos) + Xpos)*(4));
+  address = hltdc.LayerCfg[ActiveLayer].FBStartAdress + (((BSP_LCD_GetXSize()*Ypos) + Xpos)*(4));
 
   /* Get the layer pixel format */
   if ((bit_pixel/8) == 4)
@@ -1017,7 +1019,7 @@ void BSP_LCD_FillRect(uint16_t Xpos, uint16_t Ypos, uint16_t Width, uint16_t Hei
   BSP_LCD_SetTextColor(DrawProp[ActiveLayer].TextColor);
 
   /* Get the rectangle start address */
-  x_address = (hltdc_discovery.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
+  x_address = (hltdc.LayerCfg[ActiveLayer].FBStartAdress) + 4*(BSP_LCD_GetXSize()*Ypos + Xpos);
 
   /* Fill the rectangle */
   LL_FillBuffer(ActiveLayer, (uint32_t *)x_address, Width, Height, (BSP_LCD_GetXSize() - Width), DrawProp[ActiveLayer].TextColor);
@@ -1179,7 +1181,7 @@ void BSP_LCD_FillEllipse(int Xpos, int Ypos, int XRadius, int YRadius)
 void BSP_LCD_DisplayOn(void)
 {
   /* Display On */
-  __HAL_LTDC_ENABLE(&hltdc_discovery);
+  __HAL_LTDC_ENABLE(&hltdc);
 }
 
 /**
@@ -1189,7 +1191,7 @@ void BSP_LCD_DisplayOn(void)
 void BSP_LCD_DisplayOff(void)
 {
   /* Display Off */
-  __HAL_LTDC_DISABLE(&hltdc_discovery);
+  __HAL_LTDC_DISABLE(&hltdc);
 }
 
 /**
@@ -1331,7 +1333,7 @@ void BSP_LCD_SetBrightness(uint8_t BrightnessValue)
   TIM_OC_InitTypeDef LCD_TIM_Config;
 
   /* Stop PWM Timer channel */
-  HAL_TIM_PWM_Stop(&LCD_TimHandle, LCD_TIMx_CHANNEL);
+  HAL_TIM_PWM_Stop(&htim8, LCD_TIMx_CHANNEL);
 
   /* Common configuration for all channels */
   LCD_TIM_Config.OCMode       = TIM_OCMODE_PWM1;
@@ -1344,10 +1346,10 @@ void BSP_LCD_SetBrightness(uint8_t BrightnessValue)
   /* Set the pulse value for channel */
   LCD_TIM_Config.Pulse =  (uint32_t)((LCD_TIMX_PERIOD_VALUE * BrightnessValue) / 100);
 
-  HAL_TIM_PWM_ConfigChannel(&LCD_TimHandle, &LCD_TIM_Config, LCD_TIMx_CHANNEL);
+  HAL_TIM_PWM_ConfigChannel(&htim8, &LCD_TIM_Config, LCD_TIMx_CHANNEL);
 
   /* Start PWM Timer channel */
-  HAL_TIM_PWM_Start(&LCD_TimHandle, LCD_TIMx_CHANNEL);
+  HAL_TIM_PWM_Start(&htim8, LCD_TIMx_CHANNEL);
 }
 
 /**
@@ -1509,21 +1511,21 @@ static void FillTriangle(uint16_t x1, uint16_t x2, uint16_t x3, uint16_t y1, uin
 static void LL_FillBuffer(uint32_t LayerIndex, void *pDst, uint32_t xSize, uint32_t ySize, uint32_t OffLine, uint32_t ColorIndex)
 {
   /* Register to memory mode with ARGB8888 as color Mode */
-  hdma2d_discovery.Init.Mode         = DMA2D_R2M;
-  hdma2d_discovery.Init.ColorMode    = DMA2D_OUTPUT_ARGB8888;
-  hdma2d_discovery.Init.OutputOffset = OffLine;
+  hdma2d.Init.Mode         = DMA2D_R2M;
+  hdma2d.Init.ColorMode    = DMA2D_OUTPUT_ARGB8888;
+  hdma2d.Init.OutputOffset = OffLine;
 
-  hdma2d_discovery.Instance = DMA2D;
+  hdma2d.Instance = DMA2D;
 
   /* DMA2D Initialization */
-  if(HAL_DMA2D_Init(&hdma2d_discovery) == HAL_OK)
+  if(HAL_DMA2D_Init(&hdma2d) == HAL_OK)
   {
-    if(HAL_DMA2D_ConfigLayer(&hdma2d_discovery, 1) == HAL_OK)
+    if(HAL_DMA2D_ConfigLayer(&hdma2d, 1) == HAL_OK)
     {
-      if (HAL_DMA2D_Start(&hdma2d_discovery, ColorIndex, (uint32_t)pDst, xSize, ySize) == HAL_OK)
+      if (HAL_DMA2D_Start(&hdma2d, ColorIndex, (uint32_t)pDst, xSize, ySize) == HAL_OK)
       {
         /* Polling For DMA transfer */
-        HAL_DMA2D_PollForTransfer(&hdma2d_discovery, 20);
+        HAL_DMA2D_PollForTransfer(&hdma2d, 20);
       }
     }
   }
@@ -1540,27 +1542,27 @@ static void LL_FillBuffer(uint32_t LayerIndex, void *pDst, uint32_t xSize, uint3
 static void LL_ConvertLineToARGB8888(void *pSrc, void *pDst, uint32_t xSize, uint32_t ColorMode)
 {
   /* Configure the DMA2D Mode, Color Mode and output offset */
-  hdma2d_discovery.Init.Mode         = DMA2D_M2M_PFC;
-  hdma2d_discovery.Init.ColorMode    = DMA2D_OUTPUT_ARGB8888;
-  hdma2d_discovery.Init.OutputOffset = 0;
+  hdma2d.Init.Mode         = DMA2D_M2M_PFC;
+  hdma2d.Init.ColorMode    = DMA2D_OUTPUT_ARGB8888;
+  hdma2d.Init.OutputOffset = 0;
 
   /* Foreground Configuration */
-  hdma2d_discovery.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
-  hdma2d_discovery.LayerCfg[1].InputAlpha = 0xFF;
-  hdma2d_discovery.LayerCfg[1].InputColorMode = ColorMode;
-  hdma2d_discovery.LayerCfg[1].InputOffset = 0;
+  hdma2d.LayerCfg[1].AlphaMode = DMA2D_NO_MODIF_ALPHA;
+  hdma2d.LayerCfg[1].InputAlpha = 0xFF;
+  hdma2d.LayerCfg[1].InputColorMode = ColorMode;
+  hdma2d.LayerCfg[1].InputOffset = 0;
 
-  hdma2d_discovery.Instance = DMA2D;
+  hdma2d.Instance = DMA2D;
 
   /* DMA2D Initialization */
-  if(HAL_DMA2D_Init(&hdma2d_discovery) == HAL_OK)
+  if(HAL_DMA2D_Init(&hdma2d) == HAL_OK)
   {
-    if(HAL_DMA2D_ConfigLayer(&hdma2d_discovery, 1) == HAL_OK)
+    if(HAL_DMA2D_ConfigLayer(&hdma2d, 1) == HAL_OK)
     {
-      if (HAL_DMA2D_Start(&hdma2d_discovery, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
+      if (HAL_DMA2D_Start(&hdma2d, (uint32_t)pSrc, (uint32_t)pDst, xSize, 1) == HAL_OK)
       {
         /* Polling For DMA transfer */
-        HAL_DMA2D_PollForTransfer(&hdma2d_discovery, 20);
+        HAL_DMA2D_PollForTransfer(&hdma2d, 20);
       }
     }
   }

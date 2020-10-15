@@ -27,14 +27,11 @@
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-/* Include LCD component Driver */
-/* LCD RK043FN48H-CT672B 4,3" 480x272 pixels */
-#include "../Components/rk043fn48h/rk043fn48h.h"
 
 /* Include SDRAM Driver */
 #include "stm32h745i_discovery_sdram.h"
 
-#include "stm32h745i_discovery.h"
+// #include "stm32h745i_discovery.h"
 #include "../../../Utilities/Fonts/fonts.h"
 
 /** @addtogroup BSP
@@ -78,20 +75,30 @@ typedef enum
 /**
   * @}
   */
-#define RK043FN48H_HSYNC_WIDTH 2
-#define RK043FN48H_VSYNC_WIDTH 10
-#define RK043FN48H_HBP RK043FN48H_HSYNC_ACCUM - RK043FN48H_HSYNC_WIDTH
-#define RK043FN48H_VBP RK043FN48H_VSYNC_ACCUM - RK043FN48H_VSYNC_WIDTH
-#define RK043FN48H_HEIGHT 288
-#define RK043FN48H_WIDTH 480
-#define RK043FN48H_HSYNC_ACCUM 43
-#define RK043FN48H_VSYNC_ACCUM 12
-#define RK043FN48H_HFP 8
-#define RK043FN48H_VFP 4
-#define RK043FN48H_TOTAL_WIDTH RK043FN48H_HSYNC_ACCUM + RK043FN48H_WIDTH + RK043FN48H_HFP
-#define RK043FN48H_TOTAL_HEIGHT RK043FN48H_VSYNC_ACCUM + RK043FN48H_HEIGHT + RK043FN48H_VFP
+//#define RK043FN48H_HSYNC_WIDTH 2
+//#define RK043FN48H_VSYNC_WIDTH 10
+//#define RK043FN48H_HBP RK043FN48H_HSYNC_ACCUM - RK043FN48H_HSYNC_WIDTH
+//#define RK043FN48H_VBP RK043FN48H_VSYNC_ACCUM - RK043FN48H_VSYNC_WIDTH
+//#define RK043FN48H_HEIGHT 288
+//#define RK043FN48H_WIDTH 480
+//#define RK043FN48H_HSYNC_ACCUM 43
+//#define RK043FN48H_VSYNC_ACCUM 12
+//#define RK043FN48H_HFP 8
+//#define RK043FN48H_VFP 4
+//#define RK043FN48H_TOTAL_WIDTH RK043FN48H_HSYNC_ACCUM + RK043FN48H_WIDTH + RK043FN48H_HFP
+//#define RK043FN48H_TOTAL_HEIGHT RK043FN48H_VSYNC_ACCUM + RK043FN48H_HEIGHT + RK043FN48H_VFP
 
-
+/** 
+  * @brief  RK043FN48H Size  
+  */     
+#define  RK043FN48H_WIDTH    ((uint16_t)480)          /* LCD PIXEL WIDTH            */
+#define  RK043FN48H_HEIGHT   ((uint16_t)272)          /* LCD PIXEL HEIGHT           */
+#define  RK043FN48H_HSYNC            ((uint16_t)41)   /* Horizontal synchronization */
+#define  RK043FN48H_HBP              ((uint16_t)13)   /* Horizontal back porch      */
+#define  RK043FN48H_HFP              ((uint16_t)32)   /* Horizontal front porch     */
+#define  RK043FN48H_VSYNC            ((uint16_t)10)   /* Vertical synchronization   */
+#define  RK043FN48H_VBP              ((uint16_t)2)    /* Vertical back porch        */
+#define  RK043FN48H_VFP              ((uint16_t)2)    /* Vertical front porch       */
 /** @defgroup STM32H745I_DISCOVERY_LCD_Exported_Constants Exported Constants
   * @{
   */
@@ -111,6 +118,39 @@ typedef enum
   * @brief  LCD FB_StartAddress
   */
 #define LCD_FB_START_ADDRESS       ((uint32_t)0xD0000000)
+
+
+/**
+  * @brief LCD special pins
+  */
+/* LCD reset pin */
+#define LCD_RESET_PIN                         GPIO_PIN_2
+#define LCD_RESET_PULL                        GPIO_NOPULL
+#define LCD_RESET_GPIO_PORT                   GPIOA
+#define LCD_RESET_GPIO_CLK_ENABLE()           __HAL_RCC_GPIOA_CLK_ENABLE()
+#define LCD_RESET_GPIO_CLK_DISABLE()          __HAL_RCC_GPIOA_CLK_DISABLE()
+
+/* LCD display enable pin */
+#define LCD_DISP_EN_PIN                       GPIO_PIN_7
+#define LCD_DISP_EN_GPIO_PORT                 GPIOK
+#define LCD_DISP_EN_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOK_CLK_ENABLE()
+#define LCD_DISP_EN_GPIO_CLK_DISABLE()        __HAL_RCC_GPIOK_CLK_DISABLE()
+
+/* Back-light control pin */
+#define LCD_BL_CTRL_PIN                       GPIO_PIN_0
+#define LCD_BL_CTRL_GPIO_PORT                 GPIOK
+#define LCD_BL_CTRL_GPIO_CLK_ENABLE()         __HAL_RCC_GPIOK_CLK_ENABLE()
+#define LCD_BL_CTRL_GPIO_CLK_DISABLE()        __HAL_RCC_GPIOK_CLK_DISABLE()
+/**
+  * @brief Definition for LCD Timer used to control the Brightnes
+  */
+#define LCD_TIMx                           TIM8
+#define LCD_TIMx_CLK_ENABLE()              __HAL_RCC_TIM8_CLK_ENABLE()
+#define LCD_TIMx_CLK_DISABLE()             __HAL_RCC_TIM8_CLK_DISABLE()
+#define LCD_TIMx_CHANNEL                   TIM_CHANNEL_3
+#define LCD_TIMx_CHANNEL_AF                GPIO_AF3_TIM8
+#define LCD_TIMX_PERIOD_VALUE              ((uint32_t)50000) /* Period Value    */
+#define LCD_TIMX_PRESCALER_VALUE           ((uint32_t)4)     /* Prescaler Value */
 
 /**
   * @brief  LCD color
